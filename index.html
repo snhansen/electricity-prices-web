@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Electricity spot price</title>
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.22.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.5.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.21.0"></script>
+    <style media="screen">
+      /* Add space between Vega-Embed links  */
+      .vega-actions a {
+      margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Spot prices for <span id="priceArea"></span></p>
+    <div id="vis" class="vega-embed" style="width: 80%;"></div>
+    <script>
+      const size = 20;
+      var vlSpec = {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        width: "container",
+        height: 2000,
+        mark: "bar",
+        encoding: {
+          y: {
+            field: "HourDK",
+            type: "ordinal",
+          },
+          x: {
+            field: "SpotPriceDKK",
+            type: "quantitative",
+            axis: {
+              title: "Spot price [DKK/MWh]",
+            },
+          },
+        },
+        layer: [
+          {
+            mark: "bar",
+            encoding: {
+              color: {
+                field: "SpotPriceDKK",
+                scale: {
+                  domain: [0, 3000, 6000],
+                  range: ["green", "red", "black"],
+                  type: "linear",
+                },
+      
+                legend: null,
+              },
+            },
+          },
+          {
+            mark: "rule",
+            encoding: {
+              y: {
+                field: "HourDK",
+              },
+              size: {
+                condition: [
+                  {
+                    value: "5",
+                    test: {
+                      field: "IsCurrent",
+                      equal: true,
+                    },
+                  },
+                ],
+                value: 0,
+              },
+            },
+          },
+          {
+            mark: {
+              type: "text",
+              align: "left",
+              baseline: "middle",
+              dx: 3,
+              fontSize: size
+            },
+            encoding: {
+              text: {
+                field: "SpotPriceDKK",
+                type: "quantitative",
+              },
+            },
+          },
+        ],
+      };
+      vlSpec.config = {axisY: {titleFontSize: size, labelFontSize: size}, axisX: {titleFontSize: size, labelFontSize: size}};
+
+      const priceArea = (new URLSearchParams(window.location.search)).get("priceArea") ?? "DK2";
+      document.getElementById("priceArea").innerHTML = priceArea;
+      fetch("https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={%22PriceArea%22:%22" + priceArea + "%22}")
+        .then((x) => x.json())
+        .then((data) => {
+          data = data["records"];
+          const now = new Date();
+          data.forEach((record) => {
+            const hour = record["HourDK"];
+            record["HourDK"] = hour.substring(5, 10) + " " + hour.substring(11, 16);
+            record["SpotPriceDKK"] = Math.round(record["SpotPriceDKK"]);
+            const dataDate = parseInt(hour.substring(8, 10));
+            const dataHour = parseInt(hour.substring(11, 13));
+            record["IsCurrent"] = now.getDate() == dataDate && now.getHours() == dataHour;
+          });
+          vlSpec.data = {
+            values: data,
+          };
+          // Embed the visualization in the container with id `vis`
+          vegaEmbed("#vis", vlSpec);
+        });
+    </script>
+  </body>
+</html>
