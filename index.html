@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Electricity spot price</title>
+    <title>DK1 spot prices</title>
     <meta charset="utf-8" />
     <script src="https://cdn.jsdelivr.net/npm/vega@5.22.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.5.0"></script>
@@ -14,26 +14,27 @@
     </style>
   </head>
   <body>
-    <p>Spot prices for <span id="priceArea"></span></p>
     <div id="vis" class="vega-embed" style="width: 80%;"></div>
     <script>
       const size = 20;
       var vlSpec = {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
         width: "container",
-        height: 2000,
+        height: 1000,
         mark: "bar",
         encoding: {
           y: {
             field: "HourDK",
             type: "ordinal",
-          },
-          x: {
-            field: "SpotPriceDKK",
+			field: "SpotPriceDKK",
             type: "quantitative",
             axis: {
               title: "Spot price [DKK/MWh]",
             },
+          },
+          x: {
+			field: "HourDK",
+            type: "ordinal",
           },
         },
         layer: [
@@ -55,7 +56,7 @@
           {
             mark: "rule",
             encoding: {
-              y: {
+              x: {
                 field: "HourDK",
               },
               size: {
@@ -75,9 +76,10 @@
           {
             mark: {
               type: "text",
-              align: "left",
+              align: "center",
+			  angle: 270,
               baseline: "middle",
-              dx: 3,
+              dx: 30,
               fontSize: size
             },
             encoding: {
@@ -91,9 +93,7 @@
       };
       vlSpec.config = {axisY: {titleFontSize: size, labelFontSize: size}, axisX: {titleFontSize: size, labelFontSize: size}};
 
-      const priceArea = (new URLSearchParams(window.location.search)).get("priceArea") ?? "DK2";
-      document.getElementById("priceArea").innerHTML = priceArea;
-      fetch("https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={%22PriceArea%22:%22" + priceArea + "%22}")
+      fetch("https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={%22PriceArea%22:%22DK1%22}")
         .then((x) => x.json())
         .then((data) => {
           data = data["records"];
