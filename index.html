@@ -44,7 +44,7 @@
               color: {
                 field: "SpotPriceDKK",
                 scale: {
-                  domain: [0, 3000, 6000],
+                  domain: [0, 3, 6],
                   range: ["green", "red", "black"],
                   type: "linear",
                 },
@@ -101,7 +101,7 @@
           data.forEach((record) => {
             const hour = record["HourDK"];
             record["HourDK"] = hour.substring(5, 10) + " " + hour.substring(11, 16);
-            record["SpotPriceDKK"] = Math.round(record["SpotPriceDKK"]);
+            record["SpotPriceDKK"] = (record["SpotPriceDKK"] / 1000).toFixed(2);
             const dataDate = parseInt(hour.substring(8, 10));
             const dataHour = parseInt(hour.substring(11, 13));
             record["IsCurrent"] = now.getDate() == dataDate && now.getHours() == dataHour;
